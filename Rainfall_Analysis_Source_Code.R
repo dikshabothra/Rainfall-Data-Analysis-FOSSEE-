@@ -19,7 +19,7 @@ Unique<-unique(Intermediate$DIST)
 # Intermediate[which(Intermediate$DIST==Unique[1])[1]:which(Intermediate$DIST==Unique[1])[length(which(Intermediate$DIST==Unique[1]))],]
 
 # Creating a folder for storing all .xlsx files having data for each district seperately.
-dir.create("C:/Users/Digvijay Singh/Downloads/Rainfall Data Analysis/Intermediate")
+dir.create("Intermediate")
 
 # Creating loop for writing an excel file with a particular district data.
 for(i in 1:length(Unique))
