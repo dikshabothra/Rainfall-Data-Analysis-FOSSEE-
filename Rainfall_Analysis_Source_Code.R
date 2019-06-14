@@ -1,3 +1,7 @@
+#---------------------------------------------------------------------------------------------------------------------------------------------------------
+# Reading in Data as data frame, converting into Time series.
+#---------------------------------------------------------------------------------------------------------------------------------------------------------
+
 # Loading library "readxl" for reading in .xlsx file via R.
 # Loading library "openxlsx" for writing in .xlsx file via R.
 library(readxl)
@@ -5,7 +9,7 @@ library(openxlsx)
 
 # Data from file is stored in the data frame named as 'Intermediate'.
 # "read_excel" function of "readxl" library is used.
-Intermediate<-read_excel("(IMD)_Rainfall_Data_-_100_years.xlsx")
+Intermediate<-read_excel("Rainfall_Data_(111_years).xlsx")
 
 # Removing NA values from 'Intermediate'.
 Intermediate<-na.omit(Intermediate)
@@ -38,38 +42,65 @@ for(j in 1:length(Unique))
   Data<-as.data.frame(Data)
   row.names(Data)<-Intermediate$Year[1:length(row.names(Data))]
   Data<-Data[,-1]
-  #Data<-Data[,-13:-18]
   assign(Unique[j],Data)
 }
 
-# Converting each data frame containing district rainfall data into a time series and plotting its graph.
+# Deleting "Intermediate" directory.
+unlink("Intermediate",recursive=T)
+
+#---------------------------------------------------------------------------------------------------------------------------------------------------------
+# Plotting Monthwise and Annual data for each district.
+#---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Creating a folder for storing all analysis charts for each district seperately.
+dir.create("Analysis")
 for(k in 1:length(Unique))
 {
-  Data<-eval(parse(text=paste0("`",Unique[k],"`")))
-  
+  # Creating a folder for each district.
+  dir.create(paste0("Analysis/",Unique[k]))
+}
+
+# Converting each data frame containing district rainfall data into time series and plotting its graph.
+# Saving each plot in its respective folder.
+for(l in 1:length(Unique))
+{
+  # Creating dataframes each having a seperate district data with the same name as the respective district.
+  Data<-eval(parse(text=paste0("`",Unique[1],"`")))
   # For plotting monthwise.
   Month<-Data
   Month<-(as.vector(t(as.matrix(Month[,-13:-18]))))
-  Month<-ts(Month,frequency=12,start=Intermediate$Year[1],end=Intermediate$Year[length(Intermediate$Year)])
+  Month<-ts(Month,frequency=12,start=Intermediate$Year[1],
+            end=Intermediate$Year[length(Intermediate$Year)])
   
-  # For plotting periodwise.
-  Period<-Data
-  Period<-(as.vector(t(as.matrix(Period[,-1:-12]))))
-  Period<-ts(Period,frequency=12,start=Intermediate$Year[1],end=Intermediate$Year[length(Intermediate$Year)])
-  
+  # Saving the plot on monthwise rainfall in working directory.
+  png(file=paste0("Analysis/",Unique[l],"/Monthwise.png"),width=800,height=600)
+  plot(Month,main=paste0("Monthwise Data Visualization - ",Unique[l]),
+       ylab="Rainfall in mm",xlab="Years")
+  dev.off(which=dev.cur())
+}
+for(m in 1:length(Unique))
+{
+  # Creating dataframes each having a seperate district data with the same name as the respective district.
+  Data<-eval(parse(text=paste0("`",Unique[m],"`")))
   # For plotting Annual Rainfall.
   Annual<-Data
   Annual<-(as.vector(t(as.matrix(Annual[,13]))))
-  Annual<-ts(Annual,frequency=12,start=Intermediate$Year[1],end=Intermediate$Year[length(Intermediate$Year)])
-
-  # For plotting Kharif Rainfall.
-  Kharif<-Data
-  Kharif<-(as.vector(t(as.matrix(Kharif[,14]))))
-  Kharif<-ts(Kharif,frequency=12,start=Intermediate$Year[1],end=Intermediate$Year[length(Intermediate$Year)])
+  Annual<-ts(Annual,frequency=1,start=Intermediate$Year[1],
+             end=Intermediate$Year[length(Intermediate$Year)])
   
-  # Plotting all plots together for each district.
-  plot(Month,main=paste0(Unique[k]," - Monthwise"),ylab="Rainfall in mm")
-  plot(Period,main=paste0(Unique[k]," - Periodwise"),ylab="Rainfall in mm")
-  plot(Annual,main=paste0(Unique[k]," - Annual"),ylab="Rainfall in mm")
-  plot(Kharif,main=paste0(Unique[k]," - Kharif"),ylab="Rainfall in mm")
+  # Saving the plot on annual rainfall in working directory.
+  png(file=paste0("Analysis/",Unique[m],"/Annual.png"),width=800,height=600)
+  plot(Annual,main=paste0("Annual Data Visualization - ",Unique[m]),
+       ylab="Rainfall in mm",xlab="Years")
+  dev.off(which=dev.cur())
 }
+
+#---------------------------------------------------------------------------------------------------------------------------------------------------------
+# 30 year moving average estimation and deviation of actual rainfall from 30 year moving average for "Adilabad" district using Annual rainfall data.
+#---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+library(pracma)
+for(n in 1:length(Unique))
+{
+  # Creating dataframes each having a seperate district data with the same name as the respective district.
+  Data<-eval(parse(text=paste0("`",Unique[n],"`")))
